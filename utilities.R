@@ -60,7 +60,7 @@ merge_airbus_data<-function(folder_path) {
 }
 
 # Function to run Window DEA
-run_dea <- function(data, input_list, output_list, orientation="oo", rts="vrs", stage="one") {
+run_dea <- function(data, input_list, output_list, orientation="oo", rts="vrs") {
 
   # General function to run DEA
   # Args
@@ -124,6 +124,15 @@ add_backlog_metrics<- function(dataframe){
       # Backlog severity (relative to fleet)
       Backlog_Fleet_Ratio = (Backlog / Fleet) * 100,
       
+      # Cumulative backlog exposure
+      Cumulative_Backlog = cumsum(Backlog),
+  
+      # Backlog severity (relative to fleet)
+      Backlog_Fleet_Ratio = (Backlog / Fleet) * 100,
+      
+      # Years under high backlog
+      High_Backlog_Years = sum(Backlog > median(Backlog, na.rm = TRUE)),
+      
       # Backlog growth
       Backlog_Growth = (Backlog - lag(Backlog)) / lag(Backlog) * 100,
       Backlog_Growth = ifelse(is.na(Backlog_Growth), 0, Backlog_Growth),
@@ -131,7 +140,10 @@ add_backlog_metrics<- function(dataframe){
       # lagged values, lagging values as it takes ~2 years to get a new plane
       Backlog_lag2 = lag(Backlog, 2),
       Backlog_Growth_lag2 = lag(Backlog_Growth, 2),
-      
+
+      # rolling averages
+      Backlog_rollavg2 = rollmean(Backlog, k = 2, align = "right", fill = NA),
+
       # rolling averages
       Backlog_rollavg2 = rollmean(Backlog, k = 2, align = "right", fill = NA),
     ) %>%
