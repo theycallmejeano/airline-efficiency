@@ -11,7 +11,7 @@ df_airbus<-merge_airbus_data("data/backlog data/airbus raw") %>%
   mutate(Customer=ifelse(Customer=="Wizz Air Hungary", "Wizz Air", Customer))
 
 # clean up boeing orders
-boeing<- read_csv("data/boeing orders.csv") %>%
+boeing<- read_csv("data/backlog data/boeing orders.csv") %>%
   group_by(`Customer Name`, `Order Year`) %>%
   summarise(`Total Backlog`=sum(`Unfilled Orders`))
 
