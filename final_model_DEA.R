@@ -82,6 +82,11 @@ efficiency_wbacklog %>%
        fill = "Operating model") +
   theme_classic(base_size=16)
 
+# export efficiency scores
+write_csv((efficiency_wbacklog %>% 
+             select(Airline, Year, Efficiency_stage1, Efficiency_stage2, Additive_Efficiency)),
+          "data/efficiency_scores.csv")
+
 # ----- STEP 2: regression
 # ----- OVERALL EFFICIENCY ---- 
 # ---- BACKLOG ----
