@@ -16,9 +16,6 @@ stage2_output<-c("Revenue", "Load factor")
 stage1_model<- run_dea(merged_input, stage1_input, stage1_output, orientation="oo")
 stage2_model<- run_dea(merged_input, stage2_input, stage2_output, orientation="oo")
 
-# one-stage model
-black_box<- run_dea(merged_input, c("Expenses", "Fleet size"), c("ASK", "RPK", "Load factor"), orientation="oo")
-
 # plots
 ggplot(stage1_model, aes(x = factor(Year), y = Efficiency)) +
   geom_boxplot(outlier.alpha = 0.6) +
@@ -41,9 +38,7 @@ ggplot(stage2_model, aes(x = factor(Year), y = Efficiency)) +
 # merge the DEA
 overall_efficiency<- stage1_model %>%
   left_join(stage2_model[,c("DMU", "Efficiency")],
-                           by="DMU", suffix=c("_stage1", "_stage2")) %>%
-  mutate(#Additive_Efficiency=(w1*Efficiency_stage1) + (w2*Efficiency_stage2),
-         Harmonic_Mean_Efficiency=2/((1 / Efficiency_stage1) +(1 / Efficiency_stage2)))
+                           by="DMU", suffix=c("_stage1", "_stage2"))
 
 # NOTE: fig 4.2 plot
 overall_efficiency<- stage1_model %>% 

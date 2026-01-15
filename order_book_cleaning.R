@@ -33,7 +33,6 @@ merged_input<- airline_sample %>%
                       "Year")) %>%
   mutate(Year=as.numeric(Year),
          DMU=paste(Airline, Year, sep = "_"))
-  #filter(!is.na(Backlog))
 
 # validations
 # 1. check that all airlines have all data for the entire period
@@ -41,25 +40,6 @@ merged_input %>%
   mutate(any_missing = if_any(everything(), is.na)) %>%
   filter(any_missing) %>%
   select(Airline, Year)
-
-# Ryanair(2018, 2019, 2021,2022, 2024) and Southwest(2020, 2022,2024) missing backlog data 
-
-# ----- using covid paper data -----
-test_data<-read_csv("data/poc data.txt") %>%
-  mutate(Airline=ifelse(Airline=="EasyJet","Easyjet",Airline))
-
-# merge to order books
-mock_data<- test_data %>%
-  mutate(Airline=ifelse(Airline=="Delta Airlines","Delta Air Lines",
-                        ifelse(Airline=="IndiGo", "Indigo", Airline))) %>%
-  left_join(merged_backlog, by=c("Airline"="Customer", "Year")) %>%
-  filter(Year>2018&!Airline%in%c("LATAM Airlines","Hainan Airline","Qantas airway",
-                                 "Scandinavian Airlines","Cathay Pacific Airways","	KLM")) %>%
-    mutate(Backlog=ifelse(Airline=="Ryanair"&Year %in%c(2018,2019,2021,2022),10, 
-                          ifelse(Airline=="Ryanair"&Year>2023, 150, Backlog)),
-           DMU=paste(Airline, Year, sep = "_")) %>%
-  rename("Fleet size"="Fleet_Size")
-
 
 # ---- metrics for report -----
 airlines <- c("Air Canada","Air France","American Airlines","British Airways",
@@ -109,57 +89,3 @@ ggplot(median_df, aes(x = factor(Year), y = Median, fill=Period)) +
   theme(
     axis.text.x = element_text(hjust = 1),
     strip.text = element_text(face="bold"))
-
-# who had bigger dip in lf
-merged_input_ext %>% 
-  select(Airline, Year, `Passenger Load factor (%)`) %>% 
-  filter(Year %in% c(2019, 2020)) %>%
-  left_join(efficiency_wbacklog_ext[,c("Airline", "Year", "Operating_Model")], by=c("Airline", "Year")) %>%
-  mutate(Operating_Model=ifelse(Airline=="Air Canada", "Hub_and_Spoke", Operating_Model)) %>%
-  group_by(Operating_Model, Year) %>% summarise(mean(`Passenger Load factor (%)`))
-
-merged_input_ext %>% 
-  select(Airline, Year, `RPK`) %>% 
-  filter(Year %in% c(2019, 2020)) %>%
-  left_join(efficiency_wbacklog_ext[,c("Airline", "Year", "Operating_Model")], by=c("Airline", "Year")) %>%
-  pivot_wider(id_cols=c("Airline", "Operating_Model"), names_from=Year, values_from=`RPK`) %>% 
-  mutate(point_change=`2020`-`2019`,
-         Operating_Model=ifelse(Airline=="Air Canada", "Hub_and_Spoke", Operating_Model)) %>%
-  group_by(Operating_Model) %>% summarise(mean(point_change))
-
-merged_input_ext %>% 
-  select(Airline, Year, RPK) %>% 
-  left_join(efficiency_wbacklog_ext[,c("Airline", "Year", "Operating_Model")], by=c("Airline", "Year")) %>%
-  mutate(Operating_Model=ifelse(Airline=="Air Canada", "Hub_and_Spoke", Operating_Model)) %>%
-  group_by(Operating_Model, Year) %>% summarise(`Mean RPK`=mean(RPK)) %>%
-  arrange(Operating_Model, Year) %>%
-  group_by(Operating_Model) %>%
-  mutate(
-    Delta_RPK = `Mean RPK` - lag(`Mean RPK`),
-    Delta_Year = paste0(Year, "–", Year - 1)
-  ) %>%
-  filter(!is.na(Delta_RPK)) %>%
-  ggplot(aes(x = Year, y = `Delta_RPK`, color=Operating_Model)) +
-  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey60") +
-  geom_line(size = 1.2) +
-  geom_text(
-    aes(label = scales::comma(round(Delta_RPK))),
-    vjust = ifelse(Delta_RPK > 0, -0.6, 1.2),
-    size = 4,
-    show.legend = FALSE
-  ) +
-  scale_y_continuous(labels = scales::comma) +
-  scale_colour_manual(values = c(
-    "Hub and Spoke" = "#a6cee3",
-    "Point to Point" = "#fb9a99"
-  )) +
-  labs(
-    title = "Year-on-Year Change in RPKs by Operating Model",
-    x = "Year",
-    y = "Changes in average RPKs",
-    colour = "Operating model"
-  ) +
-  theme_classic(base_size = 16)
-  # theme(
-  #   axis.text.x = element_text(hjust = 1),
-  #   strip.text = element_text(face="bold"))
