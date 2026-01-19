@@ -60,7 +60,7 @@ merged_input %>%
 
 # Select variables for median calculation
 vars <- c("Fleet size", "Passenger Load factor (%)", "Number of employees", 
-          "Revenue", "Expenses","RPK" ,"ASK", "Backlog")
+          "Revenue", "Expenses","ASK", "Backlog")
 
 median_df <- merged_input %>%
   group_by(Year) %>%
@@ -78,7 +78,7 @@ median_df <- merged_input %>%
 # fig 4.1
 ggplot(median_df, aes(x = factor(Year), y = Median, fill=Period)) +
   geom_col(width=0.6) +
-  facet_wrap(~Variable, scales = "free_y") +
+  facet_wrap(~Variable, scales = "free_y", ncol = 3) +
   scale_fill_manual(values = c(
     "Pre-pandemic" = "#a6cee3",      # light blue
     "Pandemic" = "#fb9a99",          # light red
