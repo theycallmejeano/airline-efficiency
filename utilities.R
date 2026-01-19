@@ -160,7 +160,7 @@ add_backlog_metrics<- function(dataframe){
                        "Lufthansa", "British Airways", "Emirates", "Turkish Airlines",
                        "Korean Air", "Singapore Airlines", "Qantas",
                        "China Southern Airlines", "China Eastern Airlines",
-                       "Air Canada") ~ "Hub_and_Spoke",
+                       "Air Canada", "Air China") ~ "Hub_and_Spoke",
         TRUE ~ "Other"),
       Period=case_when(Year %in% c(2018, 2019)~"Pre-pandemic",
                        Year %in% c(2020, 2021) ~ "Pandemic",

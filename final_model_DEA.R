@@ -1,8 +1,12 @@
 # NOTE: run this first, so that deaR runs on MacOS
 options(rgl.useNULL = TRUE)
+options(scipen = 999)
+
 library(rgl)
 library(deaR)
 library(tidyverse)
+library(broom)
+library(clipr)
 
 source("utilities.R")
 
@@ -72,6 +76,9 @@ efficiency_wbacklog<- add_backlog_metrics(overall_efficiency %>%select(-DMU)) %>
 # ensure baseline is pre-pandemic
 efficiency_wbacklog$Period <- relevel(factor(efficiency_wbacklog$Period, ordered = FALSE), ref = "Pre-pandemic")
 
+# get rankings
+rank_scores(efficiency_wbacklog, score_col="Additive_Efficiency")
+
 # NOTE: fig 4.3
 efficiency_wbacklog %>%
   select(Year, Additive_Efficiency, Operating_Model) %>%
@@ -91,6 +98,7 @@ write_csv((efficiency_wbacklog %>%
 # ----- OVERALL EFFICIENCY ---- 
 # ---- BACKLOG ----
 # fleet
+# NOTE: table 4.3
 print(summary(lm(Additive_Efficiency ~ Backlog + Fleet + factor(Period) + factor(Operating_Model),
                  data = efficiency_wbacklog)))
 
@@ -101,6 +109,7 @@ print(summary(lm(Additive_Efficiency ~ Backlog * factor(Operating_Model) + facto
 print(summary(lm(Additive_Efficiency ~ Backlog + factor(Period) + factor(Operating_Model),
                  data = efficiency_wbacklog))) # no
 
+# NOTE: table 4.4
 print(summary(lm(Additive_Efficiency ~ Backlog * factor(Operating_Model) + factor(Period),
                  data = efficiency_wbacklog))) # NOTE: Backlog measure significant
 
@@ -142,32 +151,56 @@ print(summary(lm(Additive_Efficiency ~ Backlog_Fleet_Ratio * factor(Operating_Mo
                  data = efficiency_wbacklog))) # no
 # ---- BACKLOG ROLLING AVG ----
 # without fleet
+# NOTE: table 4.5
 print(summary(lm(Additive_Efficiency ~ Backlog_rollavg2 * factor(Operating_Model) + factor(Period),
                  data = efficiency_wbacklog))) # NOTE: backlog term significant
 
+tidy(summary(lm(Additive_Efficiency ~ Backlog_rollavg2 * factor(Operating_Model) + factor(Period),
+                data = efficiency_wbacklog))) %>%
+  pivot_longer(cols=c("estimate", "std.error", "p.value")) %>%
+  filter(name!="std.error") %>%
+  write_clip()
+
 print(summary(lm(Additive_Efficiency ~ Backlog_rollavg2 + factor(Operating_Model) + factor(Period),
-                 data = efficiency_wbacklog))) # NOTE: backlog term significant
+                 data = efficiency_wbacklog))) # no
 
 # with fleet
 print(summary(lm(Additive_Efficiency ~ Backlog_rollavg2 + Fleet + factor(Operating_Model) + factor(Period),
-                 data = efficiency_wbacklog)))
+                 data = efficiency_wbacklog))) # no
 
+# note: table 4.5
 print(summary(lm(Additive_Efficiency ~ Backlog_rollavg2 * factor(Operating_Model) + Fleet + factor(Period),
-                 data = efficiency_wbacklog)))
+                 data = efficiency_wbacklog))) # signficant
 
+tidy(summary(lm(Additive_Efficiency ~ Backlog_rollavg2 * factor(Operating_Model) +Fleet +factor(Period),
+                data = efficiency_wbacklog))) %>%
+  pivot_longer(cols=c("estimate", "std.error", "p.value")) %>%
+  filter(name!="std.error") %>%
+  write_clip()
+ 
 # ---- STAGE 2 EFFICIENCIES: BACKLOG ----
 # with fleet
 print(summary(lm(Efficiency_stage2 ~ Backlog + Fleet + factor(Period) + factor(Operating_Model),
                  data = efficiency_wbacklog))) # no
-
+# NOTE table 4.7
 print(summary(lm(Efficiency_stage2 ~ Backlog * factor(Operating_Model) + factor(Period) + Fleet,
-                 data = efficiency_wbacklog)))# NOTE: significant interaction
+                 data = efficiency_wbacklog)))# NOTE: significant
+
+tidy(summary(lm(Efficiency_stage2 ~ Backlog * factor(Operating_Model) +factor(Period),
+                data = efficiency_wbacklog)))
+
+
 # without fleet
 print(summary(lm(Efficiency_stage2 ~ Backlog + factor(Period) + factor(Operating_Model),
                  data = efficiency_wbacklog))) # no
 
+# NOTE: table 4.9
 print(summary(lm(Efficiency_stage2 ~ Backlog * factor(Operating_Model) + factor(Period),
                  data = efficiency_wbacklog))) # NOTE: significant backlog and interaction
+
+tidy(summary(lm(Efficiency_stage2 ~ Backlog * factor(Operating_Model) +Fleet +factor(Period),
+                data = efficiency_wbacklog)))
+ 
 
 # ---- STAGE 2 EFFICIENCIES: BACKLOG growth ----
 # with fleet
@@ -189,17 +222,24 @@ print(summary(lm(Efficiency_stage2 ~ Backlog_Growth *factor(Operating_Model) + f
 # ---- STAGE 2 EFFICIENCIES: rolling avg backlog ----
 # with fleet
 print(summary(lm(Efficiency_stage2 ~ Backlog_rollavg2 + Fleet + factor(Period) + factor(Operating_Model),
-                 data = efficiency_wbacklog))) # NOTE: significant
-
+                 data = efficiency_wbacklog))) # not significant
+# NOTE: table 4.9
 print(summary(lm(Efficiency_stage2 ~ Backlog_rollavg2 *factor(Operating_Model) + Fleet + factor(Period),
-                 data = efficiency_wbacklog))) # NOTE: interaction significant
+                 data = efficiency_wbacklog))) # NOTE: backlog and interaction significant
+
+tidy(summary(lm(Efficiency_stage2 ~ Backlog_rollavg2 * factor(Operating_Model) +factor(Period) + Fleet,
+                data = efficiency_wbacklog)))
 
 # without fleet
 print(summary(lm(Efficiency_stage2 ~ Backlog_rollavg2 + factor(Operating_Model) + factor(Period),
-                 data = efficiency_wbacklog))) # NOTE: significant, low r2
+                 data = efficiency_wbacklog))) # no
 
+# NOTE: table 4.9
 print(summary(lm(Efficiency_stage2 ~ Backlog_rollavg2 * factor(Operating_Model) + factor(Period),
                  data = efficiency_wbacklog))) # NOTE: significant
+
+tidy(summary(lm(Efficiency_stage2 ~ Backlog_rollavg2 * factor(Operating_Model) +factor(Period),
+                data = efficiency_wbacklog)))
 
 # ---- STAGE 2 EFFICIENCIES: backlog fleet ratio ----
 print(summary(lm(Efficiency_stage2 ~ Backlog_Fleet_Ratio *factor(Operating_Model) + factor(Period),
@@ -215,8 +255,15 @@ print(summary(lm(Efficiency_stage2 ~ Backlog_Fleet_Ratio + factor(Operating_Mode
 print(summary(lm(Efficiency_stage1 ~ Backlog + factor(Period) + factor(Operating_Model),
                  data = efficiency_wbacklog))) # no
 
+# table 4.6
 print(summary(lm(Efficiency_stage1 ~ Backlog * factor(Operating_Model) + factor(Period),
                  data = efficiency_wbacklog))) # NOTE: significant, but weak model
+
+tidy(summary(lm(Efficiency_stage1 ~ Backlog * factor(Operating_Model) + factor(Period),
+                data = efficiency_wbacklog))) %>%
+  pivot_longer(cols=c("estimate", "std.error", "p.value")) %>%
+  filter(name!="std.error") %>%
+  write_clip()
 
 # --- STAGE 1 EFFICIENCIES: no fleet, BACKLOG GROWTH ------
 # without fleet
@@ -231,9 +278,15 @@ print(summary(lm(Efficiency_stage1 ~ Backlog_Growth * factor(Operating_Model) + 
 # without fleet
 print(summary(lm(Efficiency_stage1 ~ Backlog_rollavg2 + factor(Period) + factor(Operating_Model),
                  data = efficiency_wbacklog))) # no
-
+# table 4.6
 print(summary(lm(Efficiency_stage1 ~ Backlog_rollavg2 * factor(Operating_Model) + factor(Period),
-                 data = efficiency_wbacklog))) # no
+                 data = efficiency_wbacklog))) # signifcant
+
+tidy(summary(lm(Efficiency_stage1 ~ Backlog_rollavg2 * factor(Operating_Model) + factor(Period),
+                data = efficiency_wbacklog))) %>%
+  pivot_longer(cols=c("estimate", "std.error", "p.value")) %>%
+  filter(name!="std.error") %>%
+  write_clip()
 
 # --- STAGE 1 EFFICIENCIES: no fleet, BACKLOG FLEET RATIO ------
 # without fleet

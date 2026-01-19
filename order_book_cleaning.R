@@ -26,7 +26,8 @@ merged_backlog<-df_airbus %>% full_join(boeing, by=c("Customer"="Customer Name",
 
 # --- STEP 2: merge order backlogs to DEA data --------
 # filter for airline sample
-airline_sample<-read_csv("data/full data extended.csv")
+#airline_sample<-read_csv("data/full data extended.csv")
+airline_sample<-read_csv("data/full data v2.csv")
 merged_input<- airline_sample %>% 
        left_join(merged_backlog, 
                  by=c("Airline"="Customer",
@@ -46,16 +47,20 @@ airlines <- c("Air Canada","Air France","American Airlines","British Airways",
               "Delta Air Lines","Emirates","Lufthansa",
               "Turkish Airlines","United Airlines","Qantas",
               "Easyjet","Frontier Airlines","Indigo","Jetblue Airways",
-              "Ryanair","Spirit Airlines","South West Airlines","Wizz Air")
+              "Ryanair","Spirit Airlines","Southwest Airlines","Wizz Air",
+              "Air China")
 
-merged_backlog %>% filter(Customer %in% airlines) %>% 
+merged_backlog %>% filter(Customer %in% airlines&Year<=2023) %>% 
   group_by(Customer) %>% 
   summarise(sum(Backlog))
 
+merged_input %>%
+  group_by(Airline) %>% 
+  summarise(sum(Backlog, na.rm=T))
 
 # Select variables for median calculation
 vars <- c("Fleet size", "Passenger Load factor (%)", "Number of employees", 
-          "Revenue", "Expenses", "RPK", "ASK", "Backlog")
+          "Revenue", "Expenses","RPK" ,"ASK", "Backlog")
 
 median_df <- merged_input %>%
   group_by(Year) %>%
