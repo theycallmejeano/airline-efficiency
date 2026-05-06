@@ -153,7 +153,7 @@ add_backlog_metrics<- function(dataframe){
         # TODO : remove from code
         # Low-cost carriers (typically P2P)
         Airline %in% c("Easyjet", "Ryanair", "Indigo", "Wizz Air", "Frontier Airlines", "Jetblue Airways",
-                       "Southwest Airlines", "Spirit Airlines") ~ "Point_to_Point",
+                       "Southwest Airlines", "Spirit Airlines", "Pegasus") ~ "Point_to_Point",
         
         # Major network carriers (hub-and-spoke)
         Airline %in% c("American Airlines", "United Airlines", "Delta Air Lines",
